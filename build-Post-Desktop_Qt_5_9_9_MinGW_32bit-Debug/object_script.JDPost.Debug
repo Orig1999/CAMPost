@@ -1,0 +1,13 @@
+INPUT(
+./debug\PostMachine.o
+./debug\XPost.o
+./debug\main.o
+./debug\mainwindow.o
+./debug\blocksform.o
+./debug\postParameter.o
+./debug\postblock.o
+./debug\postblockitem.o
+./debug\postcommand.o
+./debug\moc_mainwindow.o
+./debug\moc_blocksform.o
+);

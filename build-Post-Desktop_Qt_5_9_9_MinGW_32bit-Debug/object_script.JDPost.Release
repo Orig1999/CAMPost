@@ -1,0 +1,13 @@
+INPUT(
+./release\PostMachine.o
+./release\XPost.o
+./release\main.o
+./release\mainwindow.o
+./release\blocksform.o
+./release\postParameter.o
+./release\postblock.o
+./release\postblockitem.o
+./release\postcommand.o
+./release\moc_mainwindow.o
+./release\moc_blocksform.o
+);
