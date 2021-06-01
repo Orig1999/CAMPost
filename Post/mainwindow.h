@@ -50,14 +50,18 @@ public:
 
 private:
  //----------------
-    QStandardItemModel* CommandTreeModel;//命令树数据
-    QStandardItemModel* CommandBlkModel;//命令的block数据
+    QStandardItemModel* commandTreeModel;//命令树数据
+    QStandardItemModel* commandBlkModel;//命令的block数据
     QStandardItemModel* ParameterTreeModel;//参数树模型数据
+    QStandardItemModel* fmtTreeModel;//格式树模型数据
+    QStandardItemModel* scriptTreeModel;//脚本树模型数据
 
     XPost xpost;//后处理文件数据
     void UpdateCommandBlkModel(postCommand *selCmd);//更新命令的block数据
     void UpdateCmdTreeModel();//更新命令树的model
     void UpdateParameterTreeModel();//更新参数树的model
+    void UpdateFmtTreeModel();//更新格式树的model
+    void UpdateScriptTreeModel();//更新脚本树的model
 
     void InitMenuBarAndToolBar();//菜单栏和工具栏
     void InitStatusBar();//状态栏
@@ -67,8 +71,7 @@ private:
     void InitMidWindow();//中间窗口
     void updateLeftPropertytable();//刷新左侧的命令属性窗口
     QTableView *CmdBlockTable;
-    QTreeView *pCommandtree;//命令树
-    QTreeView *parameterTree;//参数树
+
  //-------------
     Ui::MainWindow *ui;
     //1.菜单
@@ -97,14 +100,14 @@ private:
 
 
     //3.编辑器
-    QTabWidget *ptab_editPost;//左侧tab页
-    QTreeWidget *pParametertree;
-    QTreeWidget *pScripttree;
-    //QTreeWidget *pCommandtree;
-
-    QTreeWidget *pFormatstree;//格式树
+    QTabWidget *processorEditTab;// 左侧[后处理/编辑]tab页
+    QTabWidget *cmdParamFmtScriptTreeTab;//  左侧[命令/参数/格式/脚本]tab页
+    QTreeView *commandTree;//命令树
+    QTreeView *parameterTree;//参数树
+    QTreeView *scriptTree;//脚本树
+    QTreeView *formatTtree;//格式树
     QTableWidget *leftPropertytable;//左侧属性窗口
-    QTabWidget *pEdittab;
+
 
     //4.预览窗口
     QDockWidget *ppreviewdock;     //底部浮动窗口
@@ -134,6 +137,8 @@ protected slots:
     //void onCmdsTreeClick(const QModelIndex &index);//鼠标点击命令树事件
     void slotCmdsTreeCurrentChanged(const QModelIndex &current, const QModelIndex &previous);
     void slotCmdEditTableCurrentChanged(const QModelIndex &current, const QModelIndex &previous);
+    void slotProcessorEditTabCurrentChanged(int index);//[后处理/编辑]tab页面发生切换
+    void slotCmdParamScriptTabCurrentChanged(int index);//[命令/参数/格式/脚本]tab页面发生切换
     //void slotCmdEditTableSelectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
     //void CmdEditTableSelectionRowChanged(const QModelIndex &current, const QModelIndex &previous);
     // void

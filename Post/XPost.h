@@ -29,6 +29,7 @@ public :
     map<int,postCommand> CommandsMap;//命令
     map<int,PostParameter> ParametersMap;//参数
     map<int,ParameterFormat> FormatsMap;//格式
+    //map<int,>
 };
 
 class XPost

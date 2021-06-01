@@ -21,7 +21,7 @@ MainWindow::MainWindow(QWidget *parent) :
     //            this,&MainWindow::CmdEditTableSelectionRowChanged);//命令的tableview的选中项发生改变
     //    connect(CmdBlockTable->selectionModel(),&QItemSelectionModel::currentChanged,
     //            this,&MainWindow::slotCmdEditTableCurrentChanged);//命令的tableview的选中项发生改变
-    //    connect(pCommandtree,SIGNAL(itemClicked(QTreeWidgetItem *, int)),this, SLOT(onCmdsTreeClick(QTreeWidgetItem *, int )));//添加参数
+    //    connect(commandTree,SIGNAL(itemClicked(QTreeWidgetItem *, int)),this, SLOT(onCmdsTreeClick(QTreeWidgetItem *, int )));//添加参数
     //    connect(openMenuAction,SIGNAL(triggered()),this,SLOT(onOpenFileTriggered()));//打开
     //    connect(saveMenuAction,SIGNAL(triggered()),this,SLOT(onSaveMenuActionTriggered()));//保存
 }
@@ -97,34 +97,35 @@ void MainWindow::InitLeftDock()//初始化左侧的dock页面
     //1.创建左侧的浮动窗口
     QDockWidget *pLeftdock = new  QDockWidget("后处理/编辑",this) ;
     //2.tab页
-    ptab_editPost = new QTabWidget (pLeftdock) ;
-    pLeftdock->setWidget(ptab_editPost);
+    processorEditTab = new QTabWidget (pLeftdock) ;
+    pLeftdock->setWidget(processorEditTab);
     addDockWidget(Qt::LeftDockWidgetArea,pLeftdock);
 
     //2.1 初始化后处理页面
     //刀轨文件树
-    QTreeWidget *pCLDATAtree = new QTreeWidget (ptab_editPost) ;
-    //pCommandtree->setHeaderLabels(QStringList()<<"11"<<"22");
+    QTreeWidget *pCLDATAtree = new QTreeWidget (processorEditTab) ;
+    //commandTree->setHeaderLabels(QStringList()<<"11"<<"22");
     pCLDATAtree->setHeaderLabels(QStringList()<<"CLDATA");
     pCLDATAtree->setStyle(QStyleFactory::create("windows"));
     QTreeWidgetItem *ptopitem = new QTreeWidgetItem (QStringList()<<"刀轨文件列表") ;
     pCLDATAtree->addTopLevelItem(ptopitem);
     //QTreeWidgetItem *pchilditem = new QTreeWidgetItem (QStringList()<<"PathStart") ;
     //ptopitem->addChild(pchilditem);
-    ptab_editPost->addTab(pCLDATAtree,"后处理");
+    processorEditTab->addTab(pCLDATAtree,"后处理");
 
     //2.2 初始化编辑页面
-    pEdittab = new QTabWidget (ptab_editPost) ;
-    //ptab_editPost->addTab(pEdittab,"编辑");
+    cmdParamFmtScriptTreeTab = new QTabWidget (processorEditTab) ;
+    //tabWidget->addTab(cmdParamFmtScriptTreeTab,"编辑");
     leftPropertytable = new QTableWidget (this) ;
     leftPropertytable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);//table宽度自适应填充
     QSplitter *editsplit = new QSplitter(Qt::Vertical,this);
-    editsplit->addWidget(pEdittab);
+    editsplit->addWidget(cmdParamFmtScriptTreeTab);
     editsplit->addWidget(leftPropertytable);
 
     editsplit->setStretchFactor(0,70);
     editsplit->setStretchFactor(1,30);
-    ptab_editPost->addTab(editsplit,"编辑");
+    processorEditTab->addTab(editsplit,"编辑");
+    connect(processorEditTab,SIGNAL(currentChanged(int)),this, SLOT(slotProcessorEditTabCurrentChanged(int)));
 }
 void MainWindow::InitLeftWindow()//左侧窗口
 {
@@ -135,9 +136,9 @@ void MainWindow::InitLeftWindow()//左侧窗口
     //（2）参数树
     InitParameterTree();
     //（3）格式树
-    //InitFormatTree();
+    InitFormatTree();
     //（4）脚本树
-    //InitScriptTree();
+    InitScriptTree();
 }
 void MainWindow::InitRightWindow()//右侧窗口
 {
@@ -150,59 +151,54 @@ void MainWindow::InitRightWindow()//右侧窗口
 }
 void MainWindow::InitCmdTree()//初始化命令树节点
 {
-    pCommandtree = new QTreeView (pEdittab) ;
-    pCommandtree->expandAll();
-    pEdittab->addTab(pCommandtree,"命令");
-    pCommandtree->setSelectionMode(QAbstractItemView::SingleSelection);//禁止多选，只允许选中一个节点
-    pCommandtree->setStyle(QStyleFactory::create("windows"));
-    pCommandtree->setHeaderHidden(true);//隐藏表头方法
-    //pCommandtree->expandAll();在这儿不起作用
+    commandTree = new QTreeView (cmdParamFmtScriptTreeTab) ;
+    commandTree->expandAll();
+    cmdParamFmtScriptTreeTab->addTab(commandTree,"命令");
+    commandTree->setSelectionMode(QAbstractItemView::SingleSelection);//禁止多选，只允许选中一个节点
+    commandTree->setStyle(QStyleFactory::create("windows"));
+    commandTree->setHeaderHidden(true);//隐藏表头方法
+    //commandTree->expandAll();在这儿不起作用
     UpdateCmdTreeModel();
-    pCommandtree->setModel(CommandTreeModel);
+    commandTree->setModel(commandTreeModel);
 
-    connect(pCommandtree->selectionModel(),&QItemSelectionModel::currentChanged,
+    connect(commandTree->selectionModel(),&QItemSelectionModel::currentChanged,
             this,&MainWindow::slotCmdsTreeCurrentChanged);//鼠标单击命令树
+
+    connect(cmdParamFmtScriptTreeTab,SIGNAL(currentChanged(int)),this,
+            SLOT(slotCmdParamScriptTabCurrentChanged(int)));
 }
 void MainWindow::InitParameterTree()//初始化参数树
 {
-    parameterTree = new QTreeView (pEdittab) ;
+    parameterTree = new QTreeView (cmdParamFmtScriptTreeTab) ;
     parameterTree->expandAll();
-    pEdittab->addTab(parameterTree,"参数");
+    cmdParamFmtScriptTreeTab->addTab(parameterTree,"参数");
     parameterTree->setSelectionMode(QAbstractItemView::SingleSelection);//禁止多选，只允许选中一个节点
     parameterTree->setStyle(QStyleFactory::create("windows"));
     parameterTree->setHeaderHidden(true);//隐藏表头方法
-
     UpdateParameterTreeModel();
     parameterTree->setModel(ParameterTreeModel);
 }
 void MainWindow::InitFormatTree()//初始化格式树
 {
-    pFormatstree = new QTreeWidget (pEdittab) ;
-    pFormatstree->expandAll();
-    pFormatstree->setHeaderLabels(QStringList()<<"ParameterFormat Node");
-    pFormatstree->setStyle(QStyleFactory::create("windows"));
-    //一级节点
-    QTreeWidgetItem *pFormattopitem = new QTreeWidgetItem (QStringList()<<"Formats") ;
-    pFormatstree->addTopLevelItem(pFormattopitem);
-    for(map<int,ParameterFormat>::iterator i = xpost.postData.FormatsMap.begin();
-        i!=xpost.postData.FormatsMap.end();++i)
-    {
-        QTreeWidgetItem *newItem = new QTreeWidgetItem (QStringList()<<i->second.Name) ;
-        newItem->setData(0,Qt::UserRole+1,i->first);
-        pFormattopitem->addChild(newItem);//二级节点
-    }
-    pFormatstree->expandAll();
-    pEdittab->addTab(pFormatstree,"格式");
+    formatTtree = new QTreeView (cmdParamFmtScriptTreeTab) ;
+    formatTtree->expandAll();
+    cmdParamFmtScriptTreeTab->addTab(formatTtree,"格式");
+    formatTtree->setSelectionMode(QAbstractItemView::SingleSelection);//禁止多选，只允许选中一个节点
+    formatTtree->setStyle(QStyleFactory::create("windows"));
+    formatTtree->setHeaderHidden(true);//隐藏表头方法
+    UpdateFmtTreeModel();
+    formatTtree->setModel(fmtTreeModel);
 }
 void MainWindow::InitScriptTree()//初始化脚本树
 {
-    pScripttree = new QTreeWidget (pEdittab) ;
-    pScripttree->expandAll();
-    pScripttree->setHeaderLabels(QStringList()<<"Script Node");
-    pScripttree->setStyle(QStyleFactory::create("windows"));
-    QTreeWidgetItem *pScripttopitem = new QTreeWidgetItem (QStringList()<<"Scripts") ;
-    pScripttree->addTopLevelItem(pScripttopitem);
-    pEdittab->addTab(pScripttree,"脚本");
+    scriptTree = new QTreeView (cmdParamFmtScriptTreeTab) ;
+    scriptTree->expandAll();
+    cmdParamFmtScriptTreeTab->addTab(scriptTree,"脚本");
+    scriptTree->setSelectionMode(QAbstractItemView::SingleSelection);//禁止多选，只允许选中一个节点
+    scriptTree->setStyle(QStyleFactory::create("windows"));
+    scriptTree->setHeaderHidden(true);//隐藏表头方法
+    UpdateScriptTreeModel();
+    scriptTree->setModel(scriptTreeModel);
 }
 void MainWindow::UpdateParameterCombox()//初始化参数combox
 {
@@ -244,11 +240,11 @@ void MainWindow::InitMidWindow()//初始化block页面
     ppreviewdock->setWidget(subsplit);
     setCentralWidget(split);
 
-    CommandBlkModel = new QStandardItemModel;
-    CmdBlockTable->setModel(CommandBlkModel);
+    commandBlkModel = new QStandardItemModel;
+    CmdBlockTable->setModel(commandBlkModel);
 
     //数据发生改变事件（即文本参数编辑结束）
-    connect(CommandBlkModel, SIGNAL(dataChanged(QModelIndex,QModelIndex)),
+    connect(commandBlkModel, SIGNAL(dataChanged(QModelIndex,QModelIndex)),
             this, SLOT(cmdBlkItemdataChanged(QModelIndex,QModelIndex)));
     //鼠标单击blockItem
     connect(CmdBlockTable->selectionModel(),&QItemSelectionModel::currentChanged,
@@ -259,7 +255,7 @@ void MainWindow::InitMidWindow()//初始化block页面
 //2.模型数据的更新-------------------------------------
 void MainWindow::UpdateCmdTreeModel()//更新命令树的模型
 {
-    CommandTreeModel = new QStandardItemModel;//命令树
+    commandTreeModel = new QStandardItemModel;//命令树
     for(map<int,postCommand>::iterator i = xpost.postData.CommandsMap.begin();
         i!=xpost.postData.CommandsMap.end();++i)
     {
@@ -269,19 +265,19 @@ void MainWindow::UpdateCmdTreeModel()//更新命令树的模型
         itemChild->setData(i->first,Qt::UserRole);//绑定id
         if(i->second.GroupName=="")//无需组节点，具体的命令直接挂在跟节点下
         {
-            CommandTreeModel->appendRow(itemChild);
+            commandTreeModel->appendRow(itemChild);
             //setChild效果同上 itemProject->setChild(0,itemChild);
         }
         else//需要组节点 groupItem
         {
-            QModelIndexList list = CommandTreeModel->match(CommandTreeModel->index(0, 0),
+            QModelIndexList list = commandTreeModel->match(commandTreeModel->index(0, 0),
                                                     Qt::UserRole + 1, QVariant::fromValue(i->second.GroupName),
                                                     1,Qt::MatchContains | Qt::MatchRecursive);
             if (!list.empty())//在根节下有名称为i->second.GroupName的组节点
             {
               //model->removeRow(list .first().row());
               QModelIndex currentIndex = list .at(0);
-              QStandardItem *currentItem = CommandTreeModel->itemFromIndex(currentIndex);
+              QStandardItem *currentItem = commandTreeModel->itemFromIndex(currentIndex);
               currentItem->appendRow(itemChild);
             }
             else
@@ -290,7 +286,7 @@ void MainWindow::UpdateCmdTreeModel()//更新命令树的模型
                 QStandardItem *groupItem =  new  QStandardItem(i->second.GroupName);
                 groupItem->setData(-1,Qt::UserRole);//标记是group
                 groupItem->setData(i->second.GroupName,Qt::UserRole+1);//绑定GroupName
-                CommandTreeModel->appendRow(groupItem);//二级节点
+                commandTreeModel->appendRow(groupItem);//二级节点
                 groupItem->appendRow(itemChild);
             }
         }
@@ -340,7 +336,7 @@ void MainWindow::UpdateCommandBlkModel(postCommand *selCmd)//更新命令编辑�
         }
     }
     columnMax = columnMax+1 ;
-    CommandBlkModel->clear();//清空
+    commandBlkModel->clear();//清空
     qDebug()<<selCmd->blocklist.size();
 
     for(list<postBlock>::iterator r = selCmd->blocklist.begin();
@@ -418,8 +414,27 @@ void MainWindow::UpdateCommandBlkModel(postCommand *selCmd)//更新命令编辑�
             //standarditem->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
             standarditem->setFlags(Qt::ItemIsEnabled);
         }
-         CommandBlkModel->appendRow(itemList);
+         commandBlkModel->appendRow(itemList);
     }
+}
+void MainWindow::UpdateFmtTreeModel()
+{
+    fmtTreeModel = new QStandardItemModel;
+    for(map<int, ParameterFormat >::iterator i = xpost.postData.FormatsMap.begin();
+        i!=xpost.postData.FormatsMap.end();++i)
+    {
+        QStandardItem *itemChild =  new  QStandardItem(i->second.Name);
+        itemChild->setData(i->first,Qt::UserRole);//绑定id
+        fmtTreeModel->appendRow(itemChild);
+    }
+
+}
+void MainWindow::UpdateScriptTreeModel()
+{
+    scriptTreeModel = new QStandardItemModel;
+    //未完成..
+    QStandardItem *itemChild =  new  QStandardItem("testScript");
+    scriptTreeModel->appendRow(itemChild);
 }
 //模型数据的更新----------------------------------------
 
@@ -653,9 +668,22 @@ void MainWindow::onAddText()//添加文本
 //工具栏的响应事件-------------------------------------
 
 //4.左侧窗口事件--------------------------------------
+void MainWindow::slotCmdParamScriptTabCurrentChanged(int index)
+{
+  qDebug()<<index;
+}
+void MainWindow::slotProcessorEditTabCurrentChanged(int index)
+{
+    if(index==0)//后处理
+    {
+        UpdateWindowShowState(false);
+    }
+    else
+        UpdateWindowShowState(true);
+}
 void MainWindow::slotCmdsTreeCurrentChanged(const QModelIndex &current,const QModelIndex &previous)//鼠标点击命令树
 {
-  QStandardItem *currentItem = CommandTreeModel->itemFromIndex(current);
+  QStandardItem *currentItem = commandTreeModel->itemFromIndex(current);
   //获取命令的ID
   int cmdId  = currentItem->data(Qt::UserRole).value<int>();
   if(cmdId==-1)
@@ -734,7 +762,7 @@ void MainWindow::slotCmdEditTableCurrentChanged(const QModelIndex &currentIndex,
     if(selCmd==NULL)
       return;
     PostParameter *parameter = NULL;
-    QStandardItem *currentItem = CommandBlkModel->itemFromIndex(currentIndex);
+    QStandardItem *currentItem = commandBlkModel->itemFromIndex(currentIndex);
     bool isNotEmpty = true;
     //初步筛选：如果所在的行>该命令的blocks的数目，
     if(currentItem->row() > selCmd->blocklist.size()-1 ||
@@ -793,7 +821,7 @@ void MainWindow::cmdBlkItemdataChanged(const QModelIndex &topLeft, const QModelI
     advance(blkIterator,destRow);//将迭代器向后移动destRow个位置,行
     list<postBlockItem>::iterator itemIterator = blkIterator->bloskItemList.begin();
     advance(itemIterator,destColumn);//将迭代器向后移动destColumn个位置，列
-    QStandardItem *currentItem = CommandBlkModel->itemFromIndex(topLeft);
+    QStandardItem *currentItem = commandBlkModel->itemFromIndex(topLeft);
     PostParameter parameter = PostParameter(currentItem->text());
     itemIterator->Parameter = parameter;
     //4.更新模型
@@ -884,7 +912,7 @@ void MainWindow::clickFormatCombobox(int index)//blockitem对应的参数的格�
          return;
     //2.找到表格的位置
     QModelIndex currentIndex = CmdBlockTable->selectionModel()->currentIndex();
-    QStandardItem *currentItem = CommandBlkModel->itemFromIndex(currentIndex);
+    QStandardItem *currentItem = commandBlkModel->itemFromIndex(currentIndex);
     //初步筛选：如果所在的行>该命令的blocks的数目，
     if(currentItem->row() > selCmd->blocklist.size()-1 ||
             selCmd->blocklist.size()==0)
@@ -944,8 +972,8 @@ void MainWindow::UpdateWindowShowState(bool state)//控制各个窗口的显示�
 postCommand *MainWindow::GetSelCommand()//获取当前选中的命令
 {
     //1.找到对应的命令
-    QModelIndex CmdIndex = pCommandtree->currentIndex();
-    QStandardItem *currentCmdItem = CommandTreeModel->itemFromIndex(CmdIndex);
+    QModelIndex CmdIndex = commandTree->currentIndex();
+    QStandardItem *currentCmdItem = commandTreeModel->itemFromIndex(CmdIndex);
     //获取命令的ID
     if(!(currentCmdItem->data(Qt::UserRole).canConvert<int>()))
         return NULL;
