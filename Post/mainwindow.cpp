@@ -13,17 +13,6 @@ MainWindow::MainWindow(QWidget *parent) :
     InitRightWindow();//右侧窗口
     InitMidWindow();//中间窗口
     UpdateWindowShowState(false);
-    //InitModel();//初始化Model
-    //InitUI();//初始化界面的控件
-    //    connect(CmdBlockTable->selectionModel(),&QItemSelectionModel::selectionChanged,
-    //            this,&MainWindow::slotCmdEditTableSelectionChanged);//命令的tableview的选中项发生改变
-    //    connect(CmdBlockTable->selectionModel(),&QItemSelectionModel::currentRowChanged,
-    //            this,&MainWindow::CmdEditTableSelectionRowChanged);//命令的tableview的选中项发生改变
-    //    connect(CmdBlockTable->selectionModel(),&QItemSelectionModel::currentChanged,
-    //            this,&MainWindow::slotCmdEditTableCurrentChanged);//命令的tableview的选中项发生改变
-    //    connect(commandTree,SIGNAL(itemClicked(QTreeWidgetItem *, int)),this, SLOT(onCmdsTreeClick(QTreeWidgetItem *, int )));//添加参数
-    //    connect(openMenuAction,SIGNAL(triggered()),this,SLOT(onOpenFileTriggered()));//打开
-    //    connect(saveMenuAction,SIGNAL(triggered()),this,SLOT(onSaveMenuActionTriggered()));//保存
 }
 
 //1.各个窗口的初始化函数----------------------------------------
@@ -38,6 +27,7 @@ void MainWindow::InitMenuBarAndToolBar()//菜单栏和工具栏
     newMenuAction = pFileMenu->addAction("新建");
     openMenuAction = pFileMenu->addAction("打开");
     saveMenuAction = pFileMenu->addAction("保存");
+    connect(saveMenuAction,SIGNAL(triggered()),this,SLOT(onSaveMenuActionTriggered()));//保存
     saveAsMenuAction = pFileMenu->addAction("另存");
     setingMenuAction = pFileMenu->addAction("设置");
 
@@ -459,104 +449,117 @@ void MainWindow::onOpenFileTriggered()
 void MainWindow::onSaveMenuActionTriggered()
 {
 //    //qDebug()<<"ccccc"<<endl;
-//    QFileInfo file(xpost.FilePath);
-//    QString filefullpath = "";
-//    if(!file.isDir())
-//    {
-//        filefullpath = QFileDialog::getSaveFileName(this,"选择保存的文件","",
-//                                                            "xpos(*.xpost)");
-//        if(filefullpath.isNull())
-//            return;
+    QFileInfo file(xpost.FilePath);
+    QString filefullpath = "";
+    if(!file.isDir())
+    {
+        filefullpath = QFileDialog::getSaveFileName(this,"选择保存的文件","",
+                                                            "xpos(*.xpost)");
+        if(filefullpath.isNull())
+            return;
 
-//        file = QFileInfo(filefullpath);
-//        xpost.FileName=file.fileName();
-//        xpost.FilePath=file.absolutePath();
-//    }
-//    //保存成xml文件
-//    QFile xmlFile(filefullpath);
-//    if(!xmlFile.open(QFile::WriteOnly|QFile::Truncate))
-//        return;
-//    QDomDocument doc;
-//    QDomProcessingInstruction instruction;
-//    instruction = doc.createProcessingInstruction("xml","version=\"1.0\" encoding=\"UTF-8\"");
-//    doc.appendChild(instruction);
+        file = QFileInfo(filefullpath);
+        xpost.FileName=file.fileName();
+        xpost.FilePath=file.absolutePath();
+    }
+    //保存成xml文件
+    QFile xmlFile(filefullpath);
+    if(!xmlFile.open(QFile::WriteOnly|QFile::Truncate))
+        return;
+    QDomDocument doc;
+    QDomProcessingInstruction instruction;
+    instruction = doc.createProcessingInstruction("xml","version=\"1.0\" encoding=\"UTF-8\"");
+    doc.appendChild(instruction);
 
-//    //添加根节点
-//    QDomElement root = doc.createElement("Post");
-//    doc.appendChild(root);
-//    //添加一级节点命令
-//    QDomElement cmds = doc.createElement("Commands");
-//    root.appendChild(cmds);
-//    //添加二级节点，具体的命令节点
-//    for(map<int,postCommand>::iterator i = xpost.postData.CommandsMap.begin();
-//        i!=xpost.postData.CommandsMap.end();++i)
-//    {
-//        //第 cmdIndex 个命令
-//        QDomElement iCmd = doc.createElement("Command");
-//        iCmd.setAttribute("id",i->first); //创建属性id
-//        iCmd.setAttribute("id",i->second.Name); //创建属性name
-//        iCmd.setAttribute("id",i->second.State); //创建属性state
-//        cmds.appendChild(iCmd);
+    //添加根节点
+    QDomElement root = doc.createElement("Post");
+    doc.appendChild(root);
 
-//        for(size_t cmdIndex = 0 ; cmdIndex<i->second.vBlocks.size(); ++cmdIndex)
-//        {
-//            QDomElement iBlock = doc.createElement("Block");
-//            cmds.appendChild(iBlock);
+    writeInCommands(doc,root);
+    writeInParameters(doc,root);
+    writeInFormats(doc,root);
 
-//            for(size_t j=0;j<i->second.vBlocks[cmdIndex].vBlockItems.size();++j)
-//            {
-//                pCmdBlocksEdittable->setItem(
-//                            0,0,new QTableWidgetItem(
-//                            i->second.vBlocks[cmdIndex].vBlockItems[j].Parameter.GetValue()));
-//                    switch (i->second.vBlocks[cmdIndex].vBlockItems[j].Parameter.Type) {
-//                    case Text://文本
-//                    {
-//                        QDomElement textBlockitem = doc.createElement("Blockitem");
-//                        textBlockitem.setAttribute("type","Text"); //创建属性type
-//                        textBlockitem.setAttribute("value",i->second.vBlocks[cmdIndex].vBlockItems[j].Parameter.Value.s); //创建属性value
-//                        textBlockitem.setAttribute("state",i->second.vBlocks[cmdIndex].vBlockItems[j].Parameter.State); //创建属性state
-//                        iBlock.appendChild(textBlockitem);
-//                    }
-//                        break;
-//                    case GeneralParameter://一般参数
-//                    {
-//                        QDomElement textBlockitem = doc.createElement("Blockitem");
-//                        textBlockitem.setAttribute("type","Parameter"); //创建属性id
-//                        textBlockitem.setAttribute("id",i->second.vBlocks[cmdIndex].vBlockItems[j].Parameter.ID); //创建属性id
-//                        textBlockitem.setAttribute("state",i->second.vBlocks[cmdIndex].vBlockItems[j].Parameter.State); //创建属性state
-//                        iBlock.appendChild(textBlockitem);
-//                    }
-//                        break;
-//                    case GroupParameter://组值参数
-//                    {
-//                        QDomElement textBlockitem = doc.createElement("Blockitem");
-//                        textBlockitem.setAttribute("type","Parameter"); //创建属性id
-//                        textBlockitem.setAttribute("id",i->second.vBlocks[cmdIndex].vBlockItems[j].Parameter.ID); //创建属性id
-//                        textBlockitem.setAttribute("state",i->second.vBlocks[cmdIndex].vBlockItems[j].Parameter.State); //创建属性state
-//                        iBlock.appendChild(textBlockitem);
-//                    }
-//                        break;
-//                    default:
-//                        break;
-//                }
-//            }
-//        }
-//    }
+    //输出到文件
+    QTextStream out_stream(&xmlFile);
+    doc.save(out_stream,4); //缩进4格
+    xmlFile.close();
+}
+void MainWindow::writeInCommands(QDomDocument &doc,QDomElement &root)
+{
+    //添加一级节点命令
+    QDomElement cmds = doc.createElement("commands");
+    root.appendChild(cmds);
 
-//    //添加一级节点参数
-//    QDomElement params = doc.createElement("Parameters");
-//    root.appendChild(params);
-//    //添加二级节点，具体的参数节点
+    //添加二级节点，具体的命令节点
+    for(map<int,postCommand>::iterator i = xpost.postData.CommandsMap.begin();
+        i!=xpost.postData.CommandsMap.end();++i)
+    {
+        //第 cmdIndex 个命令
+        QDomElement iCmd = doc.createElement("command");
+        iCmd.setAttribute("id",i->first); //创建属性id
+        iCmd.setAttribute("id",i->second.Name); //创建属性name
+        iCmd.setAttribute("state",i->second.State); //创建属性state
+        cmds.appendChild(iCmd);
 
-//    //添加一级节点格式
-//    QDomElement formats = doc.createElement("Formats");
-//    root.appendChild(formats);
-//    //添加二级节点，具体的格式节点
+        //block
+        for(list<postBlock>::iterator block = i->second.blocklist.begin();
+            block!=i->second.blocklist.end();++block)
+        {
+            QDomElement iBlock = doc.createElement("block");
+            iCmd.appendChild(iBlock);
 
-//    //输出到文件
-//    QTextStream out_stream(&xmlFile);
-//    doc.save(out_stream,4); //缩进4格
-//    xmlFile.close();
+            //blockitem
+            for(list<postBlockItem>::iterator blockitem = block->bloskItemList.begin();
+                blockitem!=block->bloskItemList.end();++blockitem)
+            {
+                QDomElement iBlockitem = doc.createElement("blockItem");
+                iBlock.appendChild(iBlockitem);
+                switch (blockitem->Parameter.Type) {
+                case Text://文本
+                {
+                    iBlockitem.setAttribute("type","text"); //创建属性type
+                    iBlockitem.setAttribute("state",blockitem->State); //创建属性state
+                    QDomElement itextparam = doc.createElement("param");
+                    itextparam.setAttribute("text",blockitem->Parameter.GetValue()); //创建属性state
+                    iBlockitem.appendChild(itextparam);
+                }
+                    break;
+                case GeneralParameter://一般参数
+                {
+                    iBlockitem.setAttribute("type","parameter"); //创建属性type
+                    iBlockitem.setAttribute("state",blockitem->State); //创建属性state
+                    QDomElement iparam = doc.createElement("param");
+                    iparam.setAttribute("id",blockitem->Parameter.ID); //创建属性id
+                    iparam.setAttribute("id",blockitem->Parameter.Format.ID); //创建格式id
+                    iBlockitem.appendChild(iparam);
+                }
+                    break;
+                case GroupParameter://组值参数
+                {
+                    iBlockitem.setAttribute("type","parameter"); //创建属性type
+                    iBlockitem.setAttribute("state",blockitem->State); //创建属性state
+                    QDomElement iparam = doc.createElement("param");
+                    iparam.setAttribute("id",blockitem->Parameter.ID); //创建属性id
+                    iparam.setAttribute("id",blockitem->Parameter.Format.ID); //创建格式id
+                    iBlockitem.appendChild(iparam);
+                }
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
+    }
+}
+void MainWindow::writeInParameters(QDomDocument &doc,QDomElement &root)
+{
+
+
+}
+void MainWindow::writeInFormats(QDomDocument &doc,QDomElement &root)
+{
+
+
 }
 void MainWindow::onAddNewLine()//添加一行
 {
@@ -631,7 +634,7 @@ void MainWindow::addParameter(PostParameter &parameter)//添加参数
         return;
 
     list<postBlock>::iterator blkIterator = selCmd->blocklist.begin();
-    qDebug()<<"aaaa:"<<blkIterator->bloskItemList.size();
+    //qDebug()<<"aaaa:"<<blkIterator->bloskItemList.size();
     advance(blkIterator,newRow);//将迭代器向后移动row个位置
     //qDebug()<<"bw:"<<blkIterator->GetNotEmptySize();
 
@@ -647,7 +650,7 @@ void MainWindow::addParameter(PostParameter &parameter)//添加参数
         advance(blkItem,newColum);//将迭代器向后移动newColum个位置
     }
     blkIterator->bloskItemList.insert(blkItem,newBlkItem);
-    qDebug()<<"c:"<<blkIterator->bloskItemList.size();
+    //qDebug()<<"c:"<<blkIterator->bloskItemList.size();
     UpdateCommandBlkModel(selCmd);//更新模型
 }
 void MainWindow::onAddParameter()//添加参数
@@ -657,8 +660,8 @@ void MainWindow::onAddParameter()//添加参数
     map<int,PostParameter>::iterator paramkey = xpost.postData.ParametersMap.find(paramid);
     if(paramkey==xpost.postData.ParametersMap.end())
         return;
-    PostParameter parameter = xpost.postData.ParametersMap[paramid];
-    addParameter(parameter);
+    //PostParameter parameter = xpost.postData.ParametersMap[paramid];
+    addParameter(xpost.postData.ParametersMap[paramid]);
 }
 void MainWindow::onAddText()//添加文本
 { 

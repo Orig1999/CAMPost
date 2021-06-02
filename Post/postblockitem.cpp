@@ -2,10 +2,11 @@
 postBlockItem::postBlockItem(PostParameter &parameter)
 {
   Parameter = parameter;
+  State = OutPut;
 }
 postBlockItem::postBlockItem()
 {
-
+  State = OutPut;
 }
 bool postBlockItem::IsEmpty()
 {

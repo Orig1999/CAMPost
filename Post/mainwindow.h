@@ -162,6 +162,10 @@ protected slots:
     void onDel();//删除对象
     void onAddNewLine();//添加一行
     void onSaveMenuActionTriggered();
+    void writeInCommands(QDomDocument &doc,QDomElement &root);
+    void writeInParameters(QDomDocument &doc,QDomElement &root);
+    void writeInFormats(QDomDocument &doc,QDomElement &root);
+
     void onOpenFileTriggered();
 
 

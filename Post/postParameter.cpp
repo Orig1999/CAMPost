@@ -9,7 +9,7 @@ PostParameter::PostParameter()
     Value=ParameterValue();//值
     Format=ParameterFormat();//格式
     NeedOutPut=false;//该参数是否需要输出
-    State = OutPut;
+    //State = OutPut;
     //++Index;
 }
 int PostParameter::Index = 0;

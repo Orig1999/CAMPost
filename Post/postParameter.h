@@ -99,11 +99,6 @@ enum ParameterType
 	GeneralParameter,//一般参数
 	GroupParameter//组值参数
 };
-enum ParameterState
-{
-    OutPut,
-    NotOutPut
-};
 
 //参数可能是文本（字符串），组值（M07/M08/M09）,一般参数（进给F2000.5,路径名称）
 class PostParameter
@@ -134,7 +129,7 @@ public :
 	ParameterFormat Format;//格式
     QString GetValue();//参照Format将Value处理成相应的字符串
 	bool NeedOutPut;//该参数是否需要输出
-    ParameterState State;
+    //ParameterState State;
 };
 
 Q_DECLARE_METATYPE(PostParameter)
