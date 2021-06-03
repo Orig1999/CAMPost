@@ -429,10 +429,30 @@ void MainWindow::UpdateScriptTreeModel()
 //模型数据的更新----------------------------------------
 
 //3.工具栏的响应事件-------------------------------------
+void MainWindow::initFormats(QDomElement formatsElem)
+{
+  for(int i=0;i<formatsElem.childNodes().count();++i)
+  {
+      QDomElement elem = formatsElem.childNodes().at(i).toElement();
+      QString id = elem.attribute("id");
+      QString name = elem.attribute("name");
+      QString prefix = elem.attribute("prefix");
+      QString postfix = elem.attribute("postfix");
+      QString decimalCount = elem.attribute("decimalCount");
+      ParameterFormat format = ParameterFormat(name,prefix,postfix,decimalCount.toInt());
+      xpost.postData.FormatsMap.insert(map<int,ParameterFormat>::value_type(format.ID,format));
+  }
+}
+void MainWindow::initParameters(QDomElement formatsElem)
+{
+
+}
+void MainWindow::initCommands(QDomElement formatsElem)
+{
+
+}
 void MainWindow::onOpenFileTriggered()
 {
-    //qDebug()<<"ccccc"<<endl;
-    //保存成xml文件
     QFile xmlFile(xpost.FileName);
     if(!xmlFile.open(QFile::ReadOnly))
         return;
@@ -442,22 +462,45 @@ void MainWindow::onOpenFileTriggered()
         xmlFile.close();
         return;
     }
-
     //获取根节点
     QDomElement root = doc.documentElement();
+    QDomNodeList nodeList = root.childNodes();
+    QDomElement commandsElem ;
+    QDomElement parametersElem ;
+    QDomElement formatsElem ;
+    for(int i=0;i<nodeList.count();++i)
+    {
+      QDomElement elem = nodeList.at(i).toElement();
+      if(elem.text()=="commands")
+      {
+        commandsElem = elem;
+      }
+      else if(elem.text()=="parameters")
+      {
+        parametersElem = elem;
+      }
+      else if(elem.text()=="formats")
+      {
+        formatsElem = elem;
+      }
+    }
+  xpost.postData.CommandsMap.clear();
+  xpost.postData.ParametersMap.clear();
+  xpost.postData.FormatsMap.clear();
+  initFormats(formatsElem);
+  initParameters(formatsElem);
+  initCommands(formatsElem);
 }
 void MainWindow::onSaveMenuActionTriggered()
 {
-//    //qDebug()<<"ccccc"<<endl;
+   //qDebug()<<"ccccc"<<endl;
     QFileInfo file(xpost.FilePath);
     QString filefullpath = "";
     if(!file.isDir())
     {
-        filefullpath = QFileDialog::getSaveFileName(this,"选择保存的文件","",
-                                                            "xpos(*.xpost)");
+        filefullpath = QFileDialog::getSaveFileName(this,"选择保存的文件","","xpos(*.xpost)");
         if(filefullpath.isNull())
             return;
-
         file = QFileInfo(filefullpath);
         xpost.FileName=file.fileName();
         xpost.FilePath=file.absolutePath();
@@ -470,15 +513,12 @@ void MainWindow::onSaveMenuActionTriggered()
     QDomProcessingInstruction instruction;
     instruction = doc.createProcessingInstruction("xml","version=\"1.0\" encoding=\"UTF-8\"");
     doc.appendChild(instruction);
-
     //添加根节点
     QDomElement root = doc.createElement("Post");
     doc.appendChild(root);
-
     writeInCommands(doc,root);
     writeInParameters(doc,root);
     writeInFormats(doc,root);
-
     //输出到文件
     QTextStream out_stream(&xmlFile);
     doc.save(out_stream,4); //缩进4格
@@ -489,7 +529,6 @@ void MainWindow::writeInCommands(QDomDocument &doc,QDomElement &root)
     //添加一级节点命令
     QDomElement cmds = doc.createElement("commands");
     root.appendChild(cmds);
-
     //添加二级节点，具体的命令节点
     for(map<int,postCommand>::iterator i = xpost.postData.CommandsMap.begin();
         i!=xpost.postData.CommandsMap.end();++i)
@@ -500,7 +539,6 @@ void MainWindow::writeInCommands(QDomDocument &doc,QDomElement &root)
         iCmd.setAttribute("id",i->second.Name); //创建属性name
         iCmd.setAttribute("state",i->second.State); //创建属性state
         cmds.appendChild(iCmd);
-
         //block
         for(list<postBlock>::iterator block = i->second.blocklist.begin();
             block!=i->second.blocklist.end();++block)
@@ -530,7 +568,7 @@ void MainWindow::writeInCommands(QDomDocument &doc,QDomElement &root)
                     iBlockitem.setAttribute("state",blockitem->State); //创建属性state
                     QDomElement iparam = doc.createElement("param");
                     iparam.setAttribute("id",blockitem->Parameter.ID); //创建属性id
-                    iparam.setAttribute("id",blockitem->Parameter.Format.ID); //创建格式id
+                    iparam.setAttribute("formatID",blockitem->Parameter.Format.ID); //创建格式id
                     iBlockitem.appendChild(iparam);
                 }
                     break;
@@ -540,7 +578,7 @@ void MainWindow::writeInCommands(QDomDocument &doc,QDomElement &root)
                     iBlockitem.setAttribute("state",blockitem->State); //创建属性state
                     QDomElement iparam = doc.createElement("param");
                     iparam.setAttribute("id",blockitem->Parameter.ID); //创建属性id
-                    iparam.setAttribute("id",blockitem->Parameter.Format.ID); //创建格式id
+                    iparam.setAttribute("formatID",blockitem->Parameter.Format.ID); //创建格式id
                     iBlockitem.appendChild(iparam);
                 }
                     break;
@@ -553,13 +591,40 @@ void MainWindow::writeInCommands(QDomDocument &doc,QDomElement &root)
 }
 void MainWindow::writeInParameters(QDomDocument &doc,QDomElement &root)
 {
-
-
+    //添加一级节点命令
+    QDomElement paramers = doc.createElement("parameters");
+    root.appendChild(paramers);
+    //添加二级节点，具体的参数
+    for(map<int,PostParameter>::iterator i = xpost.postData.ParametersMap.begin();
+        i!=xpost.postData.ParametersMap.end();++i)
+    {
+        //第 i 个参数
+        QDomElement iParameter = doc.createElement("parameter");
+        iParameter.setAttribute("id",i->first); //创建属性id
+        iParameter.setAttribute("name",i->second.Name); //创建属性name
+        iParameter.setAttribute("formatID",i->second.Format.ID); //创建属性格式ID
+        iParameter.setAttribute("groupName",i->second.GroupName); //创建属性参数所属的组
+        paramers.appendChild(iParameter);
+    }
 }
 void MainWindow::writeInFormats(QDomDocument &doc,QDomElement &root)
 {
-
-
+    //添加一级节点命令
+    QDomElement formats = doc.createElement("formats");
+    root.appendChild(formats);
+    //添加二级节点，具体的格式
+    for(map<int,ParameterFormat>::iterator i = xpost.postData.FormatsMap.begin();
+        i!=xpost.postData.FormatsMap.end();++i)
+    {
+        //第 i 个格式
+        QDomElement iFmt = doc.createElement("format");
+        iFmt.setAttribute("id",i->first); //创建属性id
+        iFmt.setAttribute("name",i->second.Name); //创建属性name
+        iFmt.setAttribute("prefix",i->second.Prefix); //前缀
+        iFmt.setAttribute("postfix",i->second.Postfix); //后缀
+        iFmt.setAttribute("decimalCount",i->second.DecimalNum); //小数位数
+        formats.appendChild(iFmt);
+    }
 }
 void MainWindow::onAddNewLine()//添加一行
 {

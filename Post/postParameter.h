@@ -21,7 +21,8 @@ enum ParameterValueType
 {
     StrValue,//字符串
     IntValue,//整数
-    DoubleValue//实数
+    DoubleValue,//实数
+    GroupValue//组
 };
 
 class ParameterValue
@@ -55,6 +56,7 @@ public :
     QString s;
     int i;
     double d;
+    map<QString,int>groupValList;
     bool IsUpdate;//值是否发生了变化
 };
 class ParameterFormat
@@ -84,7 +86,7 @@ public:
         Postfix=postfix;
         DecimalNum=decimalNum;
         ++Index;
-    }
+    }  
 	int ID;
     QString Prefix;
     QString Postfix;

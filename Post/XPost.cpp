@@ -1,13 +1,4 @@
 #include "XPost.h"
-//PostData::PostData(PostMachineInfo machineInfo,vector <postCommand> vcommands,
-//         vector <PostParameter> vparameters,vector <ParameterFormat> vformats)
-//{
-//    MachineInfo = machineInfo;
-//    vCommands = vcommands;
-//    vParameters = vparameters;
-//    vFormats = vformats;
-//}
-
 void PostData::SetCommands()
 {
     //开始程序命令
@@ -100,29 +91,193 @@ void PostData::SetPathParameters()
     PostParameter PathName = PostParameter("PathGroup","PathName",GeneralParameter,value,format);
     ParametersMap.insert(map<int,PostParameter>::value_type(PathName.ID,PathName));
 }
-void PostData::SetControlStitchParameters()
+void PostData::SetControlStitchParameters()//M07/8/9,M03/4/5
 {
-    ParameterValue value = ParameterValue(StrValue);
-    ParameterFormat format = ParameterFormat("CollantFormat","","",0);
-    FormatsMap.insert(map<int,ParameterFormat>::value_type(format.ID,format));
-    PostParameter Collant = PostParameter("ControlSwitchGroup","Collant",GroupParameter,value,format);
-    ParametersMap.insert(map<int,PostParameter>::value_type(Collant.ID,Collant));
+    {
+        ParameterFormat format = ParameterFormat("CollantFormat","M","",0);
+        FormatsMap.insert(map<int,ParameterFormat>::value_type(format.ID,format));
+        ParameterValue value = ParameterValue(GroupValue);
+        value.groupValList.insert(map<QString,int>::value_type("mist",7));
+        value.groupValList.insert(map<QString,int>::value_type("liquid",8));
+        value.groupValList.insert(map<QString,int>::value_type("on",8));
+        value.groupValList.insert(map<QString,int>::value_type("off",9));
+        PostParameter parameter = PostParameter("ControlSwitchGroup","CollantMode",GroupParameter,value,format);
+        ParametersMap.insert(map<int,PostParameter>::value_type(parameter.ID,parameter));
+    }
+    {
+        ParameterFormat format = ParameterFormat("SpindleModeFormat","M","",0);
+        FormatsMap.insert(map<int,ParameterFormat>::value_type(format.ID,format));
+        ParameterValue value = ParameterValue(GroupValue);
+        value.groupValList.insert(map<QString,int>::value_type("CW",3));
+        value.groupValList.insert(map<QString,int>::value_type("CCW",4));
+        value.groupValList.insert(map<QString,int>::value_type("off",5));
+        //value.groupValList.insert(map<QString,int>::value_type("off",29));
+        PostParameter parameter = PostParameter("ControlSwitchGroup","SpindleMode",GroupParameter,value,format);
+        ParametersMap.insert(map<int,PostParameter>::value_type(parameter.ID,parameter));
+    }
 }
-void PostData::SetMoveParameters()
+void PostData::SetWorkPlaneParameters()
 {
-    ParameterValue value = ParameterValue(DoubleValue);
-    ParameterFormat format = ParameterFormat("XFormat","X","",3);
-    FormatsMap.insert(map<int,ParameterFormat>::value_type(format.ID,format));
-    PostParameter X = PostParameter("MoveGroup","X",GeneralParameter,value,format);
-    ParametersMap.insert(map<int,PostParameter>::value_type(X.ID,X));
+    {
+        ParameterFormat format = ParameterFormat("WorkPlaneOriginXFormat","X","",4);
+        FormatsMap.insert(map<int,ParameterFormat>::value_type(format.ID,format));
+        ParameterValue value = ParameterValue(DoubleValue);
+        PostParameter parameter = PostParameter("WorkPlaneGroup","WorkPlaneOriginX",GeneralParameter,value,format);
+        ParametersMap.insert(map<int,PostParameter>::value_type(parameter.ID,parameter));
+    }
+    {
+        ParameterFormat format = ParameterFormat("WorkPlaneOriginYFormat","Y","",4);
+        FormatsMap.insert(map<int,ParameterFormat>::value_type(format.ID,format));
+        ParameterValue value = ParameterValue(DoubleValue);
+        PostParameter parameter = PostParameter("WorkPlaneGroup","WorkPlaneOriginY",GeneralParameter,value,format);
+        ParametersMap.insert(map<int,PostParameter>::value_type(parameter.ID,parameter));
+    }
+    {
+        ParameterFormat format = ParameterFormat("WorkPlaneOriginZFormat","Z","",4);
+        FormatsMap.insert(map<int,ParameterFormat>::value_type(format.ID,format));
+        ParameterValue value = ParameterValue(DoubleValue);
+        PostParameter parameter = PostParameter("WorkPlaneGroup","WorkPlaneOriginZ",GeneralParameter,value,format);
+        ParametersMap.insert(map<int,PostParameter>::value_type(parameter.ID,parameter));
+    }
+    {
+        ParameterFormat format = ParameterFormat("WorkPlaneXVectorIFormat","I","",4);
+        FormatsMap.insert(map<int,ParameterFormat>::value_type(format.ID,format));
+        ParameterValue value = ParameterValue(DoubleValue);
+        PostParameter parameter = PostParameter("WorkPlaneGroup","WorkPlaneXVectorI",GeneralParameter,value,format);
+        ParametersMap.insert(map<int,PostParameter>::value_type(parameter.ID,parameter));
+    }
+    {
+        ParameterFormat format = ParameterFormat("WorkPlaneXVectorJFormat","J","",4);
+        FormatsMap.insert(map<int,ParameterFormat>::value_type(format.ID,format));
+        ParameterValue value = ParameterValue(DoubleValue);
+        PostParameter parameter = PostParameter("WorkPlaneGroup","WorkPlaneXVectorJ",GeneralParameter,value,format);
+        ParametersMap.insert(map<int,PostParameter>::value_type(parameter.ID,parameter));
+    }
+    {
+        ParameterFormat format = ParameterFormat("WorkPlaneXVectorIFormat","K","",4);
+        FormatsMap.insert(map<int,ParameterFormat>::value_type(format.ID,format));
+        ParameterValue value = ParameterValue(DoubleValue);
+        PostParameter parameter = PostParameter("WorkPlaneGroup","WorkPlaneXVectorK",GeneralParameter,value,format);
+        ParametersMap.insert(map<int,PostParameter>::value_type(parameter.ID,parameter));
+    }
+    {
+        ParameterFormat format = ParameterFormat("WorkPlaneYVectorIFormat","I","",4);
+        FormatsMap.insert(map<int,ParameterFormat>::value_type(format.ID,format));
+        ParameterValue value = ParameterValue(DoubleValue);
+        PostParameter parameter = PostParameter("WorkPlaneGroup","WorkPlaneYVectorI",GeneralParameter,value,format);
+        ParametersMap.insert(map<int,PostParameter>::value_type(parameter.ID,parameter));
+    }
+    {
+        ParameterFormat format = ParameterFormat("WorkPlaneYVectorJFormat","J","",4);
+        FormatsMap.insert(map<int,ParameterFormat>::value_type(format.ID,format));
+        ParameterValue value = ParameterValue(DoubleValue);
+        PostParameter parameter = PostParameter("WorkPlaneGroup","WorkPlaneYVectorJ",GeneralParameter,value,format);
+        ParametersMap.insert(map<int,PostParameter>::value_type(parameter.ID,parameter));
+    }
+    {
+        ParameterFormat format = ParameterFormat("WorkPlaneYVectorIFormat","K","",4);
+        FormatsMap.insert(map<int,ParameterFormat>::value_type(format.ID,format));
+        ParameterValue value = ParameterValue(DoubleValue);
+        PostParameter parameter = PostParameter("WorkPlaneGroup","WorkPlaneYVectorK",GeneralParameter,value,format);
+        ParametersMap.insert(map<int,PostParameter>::value_type(parameter.ID,parameter));
+    }
+    {
+        ParameterFormat format = ParameterFormat("WorkPlaneZVectorIFormat","I","",4);
+        FormatsMap.insert(map<int,ParameterFormat>::value_type(format.ID,format));
+        ParameterValue value = ParameterValue(DoubleValue);
+        PostParameter parameter = PostParameter("WorkPlaneGroup","WorkPlaneZVectorI",GeneralParameter,value,format);
+        ParametersMap.insert(map<int,PostParameter>::value_type(parameter.ID,parameter));
+    }
+    {
+        ParameterFormat format = ParameterFormat("WorkPlaneZVectorJFormat","J","",4);
+        FormatsMap.insert(map<int,ParameterFormat>::value_type(format.ID,format));
+        ParameterValue value = ParameterValue(DoubleValue);
+        PostParameter parameter = PostParameter("WorkPlaneGroup","WorkPlaneZVectorJ",GeneralParameter,value,format);
+        ParametersMap.insert(map<int,PostParameter>::value_type(parameter.ID,parameter));
+    }
+    {
+        ParameterFormat format = ParameterFormat("WorkPlaneZVectorIFormat","K","",4);
+        FormatsMap.insert(map<int,ParameterFormat>::value_type(format.ID,format));
+        ParameterValue value = ParameterValue(DoubleValue);
+        PostParameter parameter = PostParameter("WorkPlaneGroup","WorkPlaneZVectorK",GeneralParameter,value,format);
+        ParametersMap.insert(map<int,PostParameter>::value_type(parameter.ID,parameter));
+    }
 }
-void PostData::SetToolParameters()
+void PostData::SetMoveParameters()//X,Y,X,Z,A,B,C
+{   
+    {
+        ParameterFormat format = ParameterFormat("XFormat","X","",4);
+        FormatsMap.insert(map<int,ParameterFormat>::value_type(format.ID,format));
+        ParameterValue value = ParameterValue(DoubleValue);
+        PostParameter X = PostParameter("MoveGroup","X",GeneralParameter,value,format);
+        ParametersMap.insert(map<int,PostParameter>::value_type(X.ID,X));
+    }
+    {
+        ParameterFormat format = ParameterFormat("YFormat","Y","",4);
+        FormatsMap.insert(map<int,ParameterFormat>::value_type(format.ID,format));
+        ParameterValue value = ParameterValue(DoubleValue);
+        PostParameter Y = PostParameter("MoveGroup","Y",GeneralParameter,value,format);
+        ParametersMap.insert(map<int,PostParameter>::value_type(Y.ID,Y));
+    }
+    {
+        ParameterFormat format = ParameterFormat("ZFormat","Z","",4);
+        FormatsMap.insert(map<int,ParameterFormat>::value_type(format.ID,format));
+        ParameterValue value = ParameterValue(DoubleValue);
+        PostParameter Z = PostParameter("MoveGroup","Z",GeneralParameter,value,format);
+        ParametersMap.insert(map<int,PostParameter>::value_type(Z.ID,Z));
+    }
+    {
+        ParameterFormat format = ParameterFormat("XFormat","A","",4);
+        FormatsMap.insert(map<int,ParameterFormat>::value_type(format.ID,format));
+        ParameterValue value = ParameterValue(DoubleValue);
+        PostParameter A = PostParameter("MoveGroup","A",GeneralParameter,value,format);
+        ParametersMap.insert(map<int,PostParameter>::value_type(A.ID,A));
+    }
+    {
+        ParameterFormat format = ParameterFormat("XFormat","B","",4);
+        FormatsMap.insert(map<int,ParameterFormat>::value_type(format.ID,format));
+        ParameterValue value = ParameterValue(DoubleValue);
+        PostParameter B = PostParameter("MoveGroup","B",GeneralParameter,value,format);
+        ParametersMap.insert(map<int,PostParameter>::value_type(B.ID,B));
+    }
+    {
+        ParameterFormat format = ParameterFormat("CFormat","C","",4);
+        FormatsMap.insert(map<int,ParameterFormat>::value_type(format.ID,format));
+        ParameterValue value = ParameterValue(DoubleValue);
+        PostParameter C = PostParameter("MoveGroup","C",GeneralParameter,value,format);
+        ParametersMap.insert(map<int,PostParameter>::value_type(C.ID,C));
+    }
+}
+void PostData::SetToolParameters()//刀具名称，刀具号，刀具长度补偿号，刀具半径补偿号
 {
-  ParameterValue value = ParameterValue(StrValue);
-  ParameterFormat format = ParameterFormat("ToolNameFormat","X","",0);
-  FormatsMap.insert(map<int,ParameterFormat>::value_type(format.ID,format));
-  PostParameter ToolName = PostParameter("ToolGroup","ToolName",GeneralParameter,value,format);
-  ParametersMap.insert(map<int,PostParameter>::value_type(ToolName.ID,ToolName));
+    {
+        ParameterValue value = ParameterValue(StrValue);
+        ParameterFormat format = ParameterFormat("ToolNameFormat","(ToolName: ",")",0);
+        FormatsMap.insert(map<int,ParameterFormat>::value_type(format.ID,format));
+        PostParameter parameter = PostParameter("ToolGroup","ToolName",GeneralParameter,value,format);
+        ParametersMap.insert(map<int,PostParameter>::value_type(parameter.ID,parameter));
+    }
+    {
+        ParameterValue value = ParameterValue(IntValue);
+        ParameterFormat format = ParameterFormat("ToolNumFormat","T","",0);
+        FormatsMap.insert(map<int,ParameterFormat>::value_type(format.ID,format));
+        PostParameter parameter = PostParameter("ToolGroup","ToolNumber",GeneralParameter,value,format);
+        ParametersMap.insert(map<int,PostParameter>::value_type(parameter.ID,parameter));
+    }
+    {
+        ParameterValue value = ParameterValue(IntValue);
+        ParameterFormat format = ParameterFormat("ToolCompNumFormat","D","",0);
+        FormatsMap.insert(map<int,ParameterFormat>::value_type(format.ID,format));
+        PostParameter parameter = PostParameter("ToolGroup","ToolCompNumber",GeneralParameter,value,format);
+        ParametersMap.insert(map<int,PostParameter>::value_type(parameter.ID,parameter));
+    }
+    {
+        ParameterValue value = ParameterValue(IntValue);
+        ParameterFormat format = ParameterFormat("ToolAdjustNumFormat","H","",0);
+        FormatsMap.insert(map<int,ParameterFormat>::value_type(format.ID,format));
+        PostParameter parameter = PostParameter("ToolGroup","ToolAdjustNumber",GeneralParameter,value,format);
+        ParametersMap.insert(map<int,PostParameter>::value_type(parameter.ID,parameter));
+    }
 }
 void PostData::SetDrillParameters()
 {
@@ -150,9 +305,9 @@ void PostData::IniltData()
     SetPathParameters();
     SetControlStitchParameters();
     SetMoveParameters();
+    SetWorkPlaneParameters();
     SetToolParameters();
     SetDrillParameters();
-
     //2.系统命令初始化
     SetCommands();
 }

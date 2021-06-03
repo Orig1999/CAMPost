@@ -167,7 +167,9 @@ protected slots:
     void writeInFormats(QDomDocument &doc,QDomElement &root);
 
     void onOpenFileTriggered();
-
+    void initFormats(QDomElement formatsElem);
+    void initParameters(QDomElement formatsElem);
+    void initCommands(QDomElement formatsElem);
 
 
     //当QStandardModel中的数据被更改的时候，会发射出dataChanged信号:
