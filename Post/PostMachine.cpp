@@ -1,6 +1,8 @@
-#include "PostMachine.h"
+﻿#include "PostMachine.h"
 PostMachineInfo::PostMachineInfo()
 {
   StructType = T_3axis;
-  NCSType = JD50;
+  NCSType = NCS_JD50; 
+  Rtcp=true;
+  LocalSystem=true;
 }

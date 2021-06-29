@@ -1,4 +1,4 @@
-#include "postblock.h"
+﻿#include "postblock.h"
 //postBlock::postBlock(vector<postBlockItem> vblockItems)
 //{
 //    //vBlockItems = vblockItems;
@@ -32,12 +32,20 @@ bool postBlock::IsEmpty()
     return false;
 }
 
-QString postBlock::GetValue()
+bool postBlock::GetValue(map<int,PostParameter> &ParametersMap,QString &str,bool preview)
 {
     QString value = "";
-//    for (size_t i = 0; i < vBlockItems.size(); i++)
-//	{
-//		value += vBlockItems[i].GetValue();
-//	}
-    return value;
+    for(list<postBlockItem>::iterator item = bloskItemList.begin();
+        item!=bloskItemList.end(); ++item)
+    {
+        item->Parameter.CopyParameter(&ParametersMap.at(item->Parameter.ID));
+        QString content ="";
+        if(item->GetValue(content,preview))
+            value = value + content;
+    }
+    if(value=="")
+        return false;
+    else
+        str = value;
+    return true;
 }

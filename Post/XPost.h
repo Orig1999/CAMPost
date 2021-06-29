@@ -1,4 +1,4 @@
-#ifndef XPOST_H
+﻿#ifndef XPOST_H
 #define XPOST_H
 #include "postcommand.h"
 #include "PostMachine.h"
@@ -18,6 +18,7 @@ public :
     void SetPathParameters();
     void SetControlStitchParameters();
     void SetMoveParameters();
+    void SetSystemCoordinateParameters();
     void SetToolParameters();
     void SetDrillParameters();
     void SetWorkPlaneParameters();
@@ -28,7 +29,6 @@ public :
     map<int,postCommand> CommandsMap;//命令
     map<int,PostParameter> ParametersMap;//参数
     map<int,ParameterFormat> FormatsMap;//格式
-    //map<int,>
 };
 
 class XPost

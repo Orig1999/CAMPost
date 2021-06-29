@@ -1,4 +1,4 @@
-#ifndef POSTBLOCK_H
+﻿#ifndef POSTBLOCK_H
 #define POSTBLOCK_H
 #include "postblockitem.h"
 #include <vector>
@@ -13,7 +13,7 @@ public:
     //vector<postBlockItem> vBlockItems;
     //LinkList<postBlockItem> BloskItemList;//BloskItem链表
     list<postBlockItem> bloskItemList;//BloskItem链表
-    QString GetValue();
+    bool GetValue(map<int,PostParameter> &ParametersMap,QString &str,bool preview);
     postBlock();
     bool IsEmpty();
     size_t GetNotEmptySize();

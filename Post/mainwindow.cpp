@@ -1,4 +1,4 @@
-#include "mainwindow.h"
+﻿#include "mainwindow.h"
 #include "ui_mainwindow.h"
 
 
@@ -25,11 +25,17 @@ void MainWindow::InitMenuBarAndToolBar()//菜单栏和工具栏
 
     //创建菜单项
     newMenuAction = pFileMenu->addAction("新建");
+
     openMenuAction = pFileMenu->addAction("打开");
+    connect(openMenuAction,SIGNAL(triggered()),this,SLOT(onOpenFileTriggered()));//打开
+
     saveMenuAction = pFileMenu->addAction("保存");
     connect(saveMenuAction,SIGNAL(triggered()),this,SLOT(onSaveMenuActionTriggered()));//保存
+
     saveAsMenuAction = pFileMenu->addAction("另存");
+
     setingMenuAction = pFileMenu->addAction("设置");
+    connect(setingMenuAction,SIGNAL(triggered()),this,SLOT(onSettingMenuActionTriggered()));//设置
 
     //2.工具栏
     ptoolbar = new QToolBar(this);
@@ -82,6 +88,39 @@ void MainWindow::InitStatusBar()//状态栏
     statusBar->addWidget(statusLabl);
     setStatusBar(statusBar);
 }
+void MainWindow::addClsfAndProcessClicked()
+{
+    QFileDialog* f = new QFileDialog(this);
+    f->setWindowTitle("选择catia刀位文件*.aptsource");
+    f->setNameFilter("*.aptsource");
+    f->setViewMode(QFileDialog::Detail);
+
+    QString filePath;
+    if(f->exec() == QDialog::Accepted)
+    {
+        filePath = f->selectedFiles()[0];
+        postProcess process(filePath,xpost);
+        process.ReadCLSFAndWriteToNC();
+    }
+    QTreeWidgetItem *item = CLDATAtree->topLevelItem(0);
+    QFileInfo fileInfo= QFileInfo(filePath);
+    item->addChild(new QTreeWidgetItem(item,QStringList()<<fileInfo.fileName()));
+}
+void MainWindow::showCldataTreeRightMenu(QPoint pos)
+{
+    Q_UNUSED(pos);
+    QMenu *menuList = new QMenu(this);
+
+    QAction *add = new QAction(QStringLiteral("添加"), this);
+    //QAction *del = new QAction(QStringLiteral("删除"), this);
+    //QAction *modify = new QAction(QStringLiteral("修改"), this);
+    connect(add, SIGNAL(triggered()), this, SLOT(addClsfAndProcessClicked()));
+    menuList->addAction(add);
+    //menuList->addAction(del);
+    //menuList->addAction(modify);
+    menuList->exec(QCursor::pos());
+}
+
 void MainWindow::InitLeftDock()//初始化左侧的dock页面
 {
     //1.创建左侧的浮动窗口
@@ -93,15 +132,19 @@ void MainWindow::InitLeftDock()//初始化左侧的dock页面
 
     //2.1 初始化后处理页面
     //刀轨文件树
-    QTreeWidget *pCLDATAtree = new QTreeWidget (processorEditTab) ;
+    CLDATAtree = new QTreeWidget (processorEditTab) ;
+    CLDATAtree->setHeaderHidden(true);//隐藏表头方法
     //commandTree->setHeaderLabels(QStringList()<<"11"<<"22");
-    pCLDATAtree->setHeaderLabels(QStringList()<<"CLDATA");
-    pCLDATAtree->setStyle(QStyleFactory::create("windows"));
-    QTreeWidgetItem *ptopitem = new QTreeWidgetItem (QStringList()<<"刀轨文件列表") ;
-    pCLDATAtree->addTopLevelItem(ptopitem);
+    CLDATAtree->setHeaderLabels(QStringList()<<"CLDATA");
+    CLDATAtree->setStyle(QStyleFactory::create("windows"));
+    QTreeWidgetItem *ptopitem = new QTreeWidgetItem (QStringList()<<"刀轨文件列表",root) ;
+    CLDATAtree->addTopLevelItem(ptopitem);
     //QTreeWidgetItem *pchilditem = new QTreeWidgetItem (QStringList()<<"PathStart") ;
     //ptopitem->addChild(pchilditem);
-    processorEditTab->addTab(pCLDATAtree,"后处理");
+    processorEditTab->addTab(CLDATAtree,"后处理");
+    CLDATAtree->setContextMenuPolicy(Qt::CustomContextMenu);
+    this->connect(CLDATAtree,SIGNAL(customContextMenuRequested(QPoint)),
+                     this,SLOT(showCldataTreeRightMenu(QPoint)));
 
     //2.2 初始化编辑页面
     cmdParamFmtScriptTreeTab = new QTabWidget (processorEditTab) ;
@@ -148,7 +191,7 @@ void MainWindow::InitCmdTree()//初始化命令树节点
     commandTree->setStyle(QStyleFactory::create("windows"));
     commandTree->setHeaderHidden(true);//隐藏表头方法
     //commandTree->expandAll();在这儿不起作用
-    UpdateCmdTreeModel();
+    commandTreeModel = new QStandardItemModel;//命令树
     commandTree->setModel(commandTreeModel);
 
     connect(commandTree->selectionModel(),&QItemSelectionModel::currentChanged,
@@ -156,6 +199,8 @@ void MainWindow::InitCmdTree()//初始化命令树节点
 
     connect(cmdParamFmtScriptTreeTab,SIGNAL(currentChanged(int)),this,
             SLOT(slotCmdParamScriptTabCurrentChanged(int)));
+
+    UpdateCmdTreeModel();
 }
 void MainWindow::InitParameterTree()//初始化参数树
 {
@@ -201,6 +246,7 @@ void MainWindow::UpdateParameterCombox()//初始化参数combox
         pspecialParCmdCom->addItem(i->second.Name,i->first);
     }
 }
+
 void MainWindow::InitMidWindow()//初始化block页面
 {
     //1.中间的命令编辑子窗口
@@ -210,7 +256,8 @@ void MainWindow::InitMidWindow()//初始化block页面
                                                            "color: black;padding-left: 4px;border: 1px solid #6c6c6c;}");
     CmdBlockTable->verticalHeader()->setStyleSheet("QHeaderView::section {"
                                                              "color: black;padding-left: 4px;border: 1px solid #6c6c6c;}");
-    pCmdEdittab->addTab(CmdBlockTable,"");//更新tableview的标题
+    pCmdEdittab->addTab(CmdBlockTable,"UNLL");//更新tableview的标题
+    //CmdBlockTable->setVisible(false);
 
     //2.底部浮动预览子窗口
     ppreviewdock = new  QDockWidget("预览",this) ;
@@ -240,12 +287,14 @@ void MainWindow::InitMidWindow()//初始化block页面
     connect(CmdBlockTable->selectionModel(),&QItemSelectionModel::currentChanged,
             this,&MainWindow::slotCmdEditTableCurrentChanged);
 }
+
 //各个窗口的初始化函数----------------------------------------
 
 //2.模型数据的更新-------------------------------------
 void MainWindow::UpdateCmdTreeModel()//更新命令树的模型
 {
-    commandTreeModel = new QStandardItemModel;//命令树
+    commandTreeModel->clear();
+    //commandTreeModel = new QStandardItemModel;//命令树
     for(map<int,postCommand>::iterator i = xpost.postData.CommandsMap.begin();
         i!=xpost.postData.CommandsMap.end();++i)
     {
@@ -343,7 +392,7 @@ void MainWindow::UpdateCommandBlkModel(postCommand *selCmd)//更新命令编辑�
             QStandardItem* standarditem = NULL;
             switch (item->Parameter.Type) {
             case UnknownParameter://未知，白色
-                content = item->Parameter.GetValue();
+                //content = item->Parameter.GetValue();
                 standarditem = new QStandardItem(content);
                 itemList << standarditem;
                 standarditem->setTextAlignment(Qt::AlignCenter);//中间对齐
@@ -353,7 +402,7 @@ void MainWindow::UpdateCommandBlkModel(postCommand *selCmd)//更新命令编辑�
                 standarditem->setFlags(Qt::ItemIsEnabled);
                 break;
             case Text://文本
-                content = item->Parameter.GetValue();
+                item->Parameter.GetOutPutString(content,true);
                 standarditem = new QStandardItem(content);
                 itemList << standarditem;
                 standarditem->setTextAlignment(Qt::AlignCenter);//中间对齐
@@ -434,62 +483,160 @@ void MainWindow::initFormats(QDomElement formatsElem)
   for(int i=0;i<formatsElem.childNodes().count();++i)
   {
       QDomElement elem = formatsElem.childNodes().at(i).toElement();
-      QString id = elem.attribute("id");
+      int id = elem.attribute("id").toInt();
       QString name = elem.attribute("name");
       QString prefix = elem.attribute("prefix");
       QString postfix = elem.attribute("postfix");
       QString decimalCount = elem.attribute("decimalCount");
-      ParameterFormat format = ParameterFormat(name,prefix,postfix,decimalCount.toInt());
+      ParameterFormat format = ParameterFormat(name,prefix,postfix,decimalCount.toInt(),id);
       xpost.postData.FormatsMap.insert(map<int,ParameterFormat>::value_type(format.ID,format));
   }
 }
-void MainWindow::initParameters(QDomElement formatsElem)
+void MainWindow::initParameters(QDomElement parametersElem)
 {
-
+    for(int i=0;i<parametersElem.childNodes().count();++i)
+    {
+        QDomElement elem = parametersElem.childNodes().at(i).toElement();
+        QString id = elem.attribute("id");
+        QString name = elem.attribute("name");
+        //qDebug()<<name<<endl;
+        int formatID = elem.attribute("formatID").toInt();
+        int type = elem.attribute("type").toInt();
+        QString groupName = elem.attribute("groupName");
+        ParameterType paramtype = (ParameterType)type;
+        ParameterFormat format = xpost.postData.FormatsMap.at(formatID);
+        PostParameter parameter = PostParameter(groupName,name,paramtype,format,id.toInt());
+        xpost.postData.ParametersMap.insert(map<int,PostParameter>::value_type(parameter.ID,parameter));
+    }
 }
-void MainWindow::initCommands(QDomElement formatsElem)
+void MainWindow::createCommandFromNode(QDomElement elem,postCommand *cmd)
 {
+    QString id = elem.attribute("id");
+    QString name = elem.attribute("name");
+    QString groupName = elem.attribute("groupName");
+    int state = elem.attribute("state").toInt();
+    CommandState cmdstate = (CommandState)state;
+    *cmd = postCommand(name,groupName,id.toInt(),cmdstate,false);
+}
+void MainWindow::createBlockFromNode(QDomElement cmdElem,postBlock *blk)
+{
+    postBlock block = postBlock();
+    QDomNodeList itemNodelist = cmdElem.childNodes();
+    for(int i=0;i<itemNodelist.count();++i)
+    {
+      QDomElement itemElem = itemNodelist.at(i).toElement();//blockitem
+      postBlockItem blkitem;
+      createBlockItemFromNode(itemElem,&blkitem);
 
+      blk->bloskItemList.push_back(blkitem);// 将blockitem添加入bloskItemList
+    }
+}
+
+void MainWindow::createBlockItemFromNode(QDomElement itemElem,postBlockItem *blkitem)
+{
+    QString itemType = itemElem.attribute("type");//parameter text
+    blkitem->State = (ItemState)itemElem.attribute("state").toInt();
+    if(itemType=="text")//文本
+    {
+        QString text = itemElem.attribute("text");
+        blkitem->Parameter = PostParameter(text);
+    }
+    else if(itemType=="parameter")//文本 <param formatID="53" id="24"/>
+    {
+        int fmtid = itemElem.attribute("formatID").toInt();
+        int id = itemElem.attribute("id").toInt();
+        PostParameter parameter(id);
+        parameter.Format = xpost.postData.FormatsMap.at(fmtid);
+        blkitem->Parameter = parameter;
+    }
+}
+void MainWindow::initCommands(QDomElement cmdElem)
+{
+    for(int i=0;i<cmdElem.childNodes().count();++i)
+    {
+        QDomElement elem = cmdElem.childNodes().at(i).toElement();//command
+        postCommand cmd(false);
+        createCommandFromNode(elem,&cmd);//创建命令
+
+        QDomNodeList blockNodelist = elem.childNodes();//blocklist
+
+        qDebug()<<blockNodelist.count();
+        qDebug()<<cmd.blocklist.size();
+        for(int i=0;i<blockNodelist.count();++i)
+        {
+          QDomElement blocksElem = blockNodelist.at(i).toElement();//block
+          postBlock block;
+          createBlockFromNode(blocksElem,&block);//创建 block
+          cmd.blocklist.push_back(block);//block添加入command中
+        }
+        qDebug()<<cmd.blocklist.size();
+        //将命令插入xpost
+        xpost.postData.CommandsMap.insert(map<int,postCommand>::value_type(cmd.ID,cmd));
+    }
 }
 void MainWindow::onOpenFileTriggered()
 {
-    QFile xmlFile(xpost.FileName);
-    if(!xmlFile.open(QFile::ReadOnly))
-        return;
-    QDomDocument doc;
-    if(!doc.setContent(&xmlFile))
+    QFileDialog* f = new QFileDialog(this);
+    f->setWindowTitle("选择后处理文件*.xpost");
+    f->setNameFilter("*.xpost");
+    f->setViewMode(QFileDialog::Detail);
+
+    QString filePath;
+    if(f->exec() == QDialog::Accepted)
     {
-        xmlFile.close();
-        return;
+        xpost.FileName = f->selectedFiles()[0];
+
+        QFile xmlFile(xpost.FileName);
+        if(!xmlFile.open(QFile::ReadOnly))
+            return;
+        QDomDocument doc;
+        if(!doc.setContent(&xmlFile))
+        {
+            xmlFile.close();
+            return;
+        }
+        //获取根节点
+        QDomElement root = doc.documentElement();
+        qDebug()<<root.tagName()<<endl;
+        QDomNodeList nodeList = root.childNodes();
+        QDomElement commandsElem ;
+        QDomElement parametersElem ;
+        QDomElement formatsElem ;
+
+        qDebug()<<nodeList.count()<<endl;
+
+        for(int i=0;i<nodeList.count();++i)
+        {
+          QDomElement elem = nodeList.at(i).toElement();
+
+          qDebug()<<elem.tagName()<<endl;
+
+          if(elem.tagName()=="commands")
+          {
+            commandsElem = elem;
+          }
+          else if(elem.tagName()=="parameters")
+          {
+            parametersElem = elem;
+          }
+          else if(elem.tagName()=="formats")
+          {
+            formatsElem = elem;
+          }
+        }
+      xpost.postData.CommandsMap.clear();
+      xpost.postData.ParametersMap.clear();
+      xpost.postData.FormatsMap.clear();
+      initFormats(formatsElem);
+      initParameters(parametersElem);
+      initCommands(commandsElem);
+      UpdateCmdTreeModel();
     }
-    //获取根节点
-    QDomElement root = doc.documentElement();
-    QDomNodeList nodeList = root.childNodes();
-    QDomElement commandsElem ;
-    QDomElement parametersElem ;
-    QDomElement formatsElem ;
-    for(int i=0;i<nodeList.count();++i)
-    {
-      QDomElement elem = nodeList.at(i).toElement();
-      if(elem.text()=="commands")
-      {
-        commandsElem = elem;
-      }
-      else if(elem.text()=="parameters")
-      {
-        parametersElem = elem;
-      }
-      else if(elem.text()=="formats")
-      {
-        formatsElem = elem;
-      }
-    }
-  xpost.postData.CommandsMap.clear();
-  xpost.postData.ParametersMap.clear();
-  xpost.postData.FormatsMap.clear();
-  initFormats(formatsElem);
-  initParameters(formatsElem);
-  initCommands(formatsElem);
+}
+void MainWindow::onSettingMenuActionTriggered()
+{
+  settingFrm =new  SettingForm() ;
+  settingFrm->show();
 }
 void MainWindow::onSaveMenuActionTriggered()
 {
@@ -536,8 +683,9 @@ void MainWindow::writeInCommands(QDomDocument &doc,QDomElement &root)
         //第 cmdIndex 个命令
         QDomElement iCmd = doc.createElement("command");
         iCmd.setAttribute("id",i->first); //创建属性id
-        iCmd.setAttribute("id",i->second.Name); //创建属性name
+        iCmd.setAttribute("name",i->second.Name); //创建属性name
         iCmd.setAttribute("state",i->second.State); //创建属性state
+        iCmd.setAttribute("groupName",i->second.GroupName); //GroupName
         cmds.appendChild(iCmd);
         //block
         for(list<postBlock>::iterator block = i->second.blocklist.begin();
@@ -558,7 +706,9 @@ void MainWindow::writeInCommands(QDomDocument &doc,QDomElement &root)
                     iBlockitem.setAttribute("type","text"); //创建属性type
                     iBlockitem.setAttribute("state",blockitem->State); //创建属性state
                     QDomElement itextparam = doc.createElement("param");
-                    itextparam.setAttribute("text",blockitem->Parameter.GetValue()); //创建属性state
+                    QString str="";
+                    blockitem->Parameter.GetOutPutString(str,true);
+                    itextparam.setAttribute("text",str); //创建属性state
                     iBlockitem.appendChild(itextparam);
                 }
                     break;
@@ -604,6 +754,7 @@ void MainWindow::writeInParameters(QDomDocument &doc,QDomElement &root)
         iParameter.setAttribute("name",i->second.Name); //创建属性name
         iParameter.setAttribute("formatID",i->second.Format.ID); //创建属性格式ID
         iParameter.setAttribute("groupName",i->second.GroupName); //创建属性参数所属的组
+        iParameter.setAttribute("type",i->second.Type); //类型
         paramers.appendChild(iParameter);
     }
 }
@@ -742,12 +893,29 @@ void MainWindow::slotCmdParamScriptTabCurrentChanged(int index)
 }
 void MainWindow::slotProcessorEditTabCurrentChanged(int index)
 {
+    QModelIndex currentIndex = commandTree->currentIndex(); //选中的行
+    QStandardItem *currentItem = commandTreeModel->itemFromIndex(currentIndex);
+    if(currentItem==NULL)
+    {
+        UpdateWindowShowState(false);
+        return;
+    }
+    //获取命令的ID
+    int cmdId  = currentItem->data(Qt::UserRole).value<int>();
+    if(cmdId==-1)
+    {
+        UpdateWindowShowState(false);
+        return;
+    }
+
     if(index==0)//后处理
     {
         UpdateWindowShowState(false);
     }
     else
+    {
         UpdateWindowShowState(true);
+    }
 }
 void MainWindow::slotCmdsTreeCurrentChanged(const QModelIndex &current,const QModelIndex &previous)//鼠标点击命令树
 {
@@ -920,7 +1088,9 @@ void MainWindow::UpdateRightPropertytable(PostParameter *parameter)//更新右�
         pPropertytable->setItem(0,1,new QTableWidgetItem("Text"));
         //2.value
         pPropertytable->setItem(1,0,new QTableWidgetItem("Value"));
-        pPropertytable->setItem(1,1,new QTableWidgetItem(parameter->GetValue()));
+        QString str = "";
+        parameter->GetOutPutString(str,true);
+        pPropertytable->setItem(1,1,new QTableWidgetItem(str));
     }
     else if( parameter->Type== GeneralParameter || parameter->Type== GroupParameter )//一般参数和组参数
     {

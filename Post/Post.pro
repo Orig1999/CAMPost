@@ -31,21 +31,29 @@ SOURCES += \
     XPost.cpp \
         main.cpp \
         mainwindow.cpp \
+    postMath.cpp \
     postParameter.cpp \
+    postProcess.cpp \
     postblock.cpp \
     postblockitem.cpp \
-    postcommand.cpp
+    postcommand.cpp \
+    settingform.cpp
 
 HEADERS += \
+    CLFSmbol.h \
     LinkList.h \
     PostMachine.h \
     XPost.h \
         mainwindow.h \
+    postMath.h \
     postParameter.h \
+    postProcess.h \
     postblock.h \
     postblockitem.h \
-    postcommand.h
+    postcommand.h \
+    settingform.h
 
 FORMS += \
         mainwindow.ui \
-    blocksform.ui
+    blocksform.ui \
+    settingform.ui

@@ -1,4 +1,4 @@
-#ifndef MAINWINDOW_H
+﻿#ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
 #include <QMainWindow>
@@ -26,11 +26,16 @@
 #include <QStatusBar>
 #include "XPost.h"
 #include <QLineEdit>
+#include <QTextEdit>
+
 #include <map>
 #include <Qtxml>
 #include <QFileDialog>
 #include <QDomElement>
 #include <QItemDelegate>
+#include <QMessageBox>
+#include "postProcess.h"
+#include "settingform.h"
 //----------
 #include <QStandardItemModel>
 //----------
@@ -71,7 +76,9 @@ private:
     void InitMidWindow();//中间窗口
     void updateLeftPropertytable();//刷新左侧的命令属性窗口
     QTableView *CmdBlockTable;
+    QTreeWidget *CLDATAtree;//刀轨树
 
+    SettingForm *settingFrm ;
  //-------------
     Ui::MainWindow *ui;
     //1.菜单
@@ -97,7 +104,6 @@ private:
     QAction * paddTextBntAction;
     QAction * pDelBntAction;
     QAction * paddnewlineAction;
-
 
     //3.编辑器
     QTabWidget *processorEditTab;// 左侧[后处理/编辑]tab页
@@ -143,8 +149,8 @@ protected slots:
     //void CmdEditTableSelectionRowChanged(const QModelIndex &current, const QModelIndex &previous);
     // void
     //----------
-
-
+    void showCldataTreeRightMenu(QPoint pos);//刀轨树右键菜单
+    void addClsfAndProcessClicked();
 
 
 
@@ -162,6 +168,7 @@ protected slots:
     void onDel();//删除对象
     void onAddNewLine();//添加一行
     void onSaveMenuActionTriggered();
+    void onSettingMenuActionTriggered();
     void writeInCommands(QDomDocument &doc,QDomElement &root);
     void writeInParameters(QDomDocument &doc,QDomElement &root);
     void writeInFormats(QDomDocument &doc,QDomElement &root);
@@ -170,8 +177,9 @@ protected slots:
     void initFormats(QDomElement formatsElem);
     void initParameters(QDomElement formatsElem);
     void initCommands(QDomElement formatsElem);
-
-
+    void createCommandFromNode(QDomElement cmdElem,postCommand *cmd);
+    void createBlockFromNode(QDomElement cmdElem,postBlock *blk);
+    void createBlockItemFromNode(QDomElement cmdElem,postBlockItem *blkitem);
     //当QStandardModel中的数据被更改的时候，会发射出dataChanged信号:
     /*[signal] void QAbstractItemModel::dataChanged(const QModelIndex &topLeft,
     const QModelIndex &bottomRight, const QVector<int> &roles = QVector<int> ());
@@ -183,5 +191,5 @@ protected slots:
     void cmdBlkItemdataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight);
     //void cmdTreedataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight);
 };
-
+enum itemType{root = QTreeWidgetItem::UserType,child};
 #endif // MAINWINDOW_H

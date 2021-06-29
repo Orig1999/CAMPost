@@ -1,4 +1,4 @@
-#ifndef POSTBLOCKITEM_H
+﻿#ifndef POSTBLOCKITEM_H
 #define POSTBLOCKITEM_H
 #include "postParameter.h"
 #include <vector>
@@ -14,8 +14,8 @@ class postBlockItem
 public:
     ItemState State;
     PostParameter Parameter;
-    QString GetValue();
-    postBlockItem(PostParameter &parameter);
+    bool GetValue(QString &str,bool preview);
+    postBlockItem(PostParameter &parameter,ItemState stste = OutPut);
     postBlockItem();
     ~postBlockItem()
     {

@@ -1,8 +1,8 @@
-#include "postblockitem.h"
-postBlockItem::postBlockItem(PostParameter &parameter)
+﻿#include "postblockitem.h"
+postBlockItem::postBlockItem(PostParameter &parameter,ItemState stste )
 {
   Parameter = parameter;
-  State = OutPut;
+  State = stste;
 }
 postBlockItem::postBlockItem()
 {
@@ -15,7 +15,7 @@ bool postBlockItem::IsEmpty()
         return true ;
     return false;
 }
-QString postBlockItem:: GetValue()
+bool postBlockItem::GetValue(QString &str,bool preview)
 {
-    return Parameter.GetValue();
+    return Parameter.GetOutPutString(str,preview);
 }

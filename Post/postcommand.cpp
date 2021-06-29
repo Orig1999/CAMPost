@@ -1,4 +1,4 @@
-#include "postcommand.h"
+﻿#include "postcommand.h"
 //postCommand::postCommand(vector<postBlock> vblocks)
 //{
 //    ID = SYSTEM_ID+Index;
@@ -7,39 +7,44 @@
 //    ++Index;
 //}
 int postCommand::Index = 0;
-postCommand::postCommand(QString name,QString groupName)
+postCommand::postCommand(QString name,QString groupName,int id,CommandState state,bool addEmpty)
 {
     //默认向链表中添加一个头
-    postBlock block;
-    blocklist.push_back(block);
-    State = ACTIVE;
-    ID = SYSTEM_COMMAND_ID+Index;
+    if(addEmpty)
+    {
+        postBlock block;
+        blocklist.push_back(block);
+    }
+    State = state;
+    ID = id;
     Name = name;
     GroupName = groupName;
-     ++Index;
 }
-postCommand::postCommand()
+postCommand::postCommand(bool addEmpty)
 {
-//    //默认添加一个block
-    postBlock block;
-    vBlocks.push_back(block);
-
-
-//    //默认向链表中添加一个头
-//    BloskList.Insert(0,block);
-
-//    State = ACTIVE;
-//    ID = SYSTEM_COMMAND_ID+Index;
-//    Name = "";
-//    GroupName = "";
-//     ++Index;
+    //默认添加一个block
+    if(addEmpty)
+    {
+        postBlock block;
+        blocklist.push_back(block);
+    }
+    ID = SYS_CMD_UNKNOWN;
 }
-vector<QString> postCommand::GetValue()
+bool postCommand::GetValue(map<int,PostParameter> &ParametersMap,vector<QString> &str,bool preview)
 {
-    vector<QString> value ;
-    for (size_t i = 0; i < vBlocks.size(); i++)
-	{
-		value.push_back(vBlocks[i].GetValue());
-	}
-	return value;
+    for(list<postBlock>::iterator iblock= blocklist.begin();
+        iblock!=blocklist.end(); ++iblock)
+    {
+        QString blkStr="";
+        if(iblock->GetValue(ParametersMap,blkStr,preview))
+            str.push_back(blkStr);
+    }
+    if(str.size()==0)
+        return false;
+    else
+        return true;
 }
+
+
+
+
