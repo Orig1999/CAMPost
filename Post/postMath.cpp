@@ -133,9 +133,6 @@ double operator *( mathVector &v1, mathVector &v2)
 		return -999999;
 }
 
-
-
-
 void matrix::initRotateX(double angle)
 {
 	setSize(4,4);
@@ -207,78 +204,77 @@ void  matrix::initRotateZ(double angle)
 	elem[3][2]=0;
 	elem[3][3]=1;
 }
-
 //绕着X轴旋转矩阵
 void  matrix::initRotateX(double sina,double cosa)
 {
-	setSize(4,4);
-	elem[0][0]=1;
-	elem[0][1]=0;
-	elem[0][2]=0;
-	elem[0][3]=0;
+    setSize(4,4);
+    elem[0][0]=1;
+    elem[0][1]=0;
+    elem[0][2]=0;
+    elem[0][3]=0;
 
-	elem[1][0]=0;
-	elem[1][1]=cosa;
-	elem[1][2]=sina;
-	elem[1][3]=0;
+    elem[1][0]=0;
+    elem[1][1]=cosa;
+    elem[1][2]=-sina;
+    elem[1][3]=0;
 
-	elem[2][0]=0;
-	elem[2][1]=-sina;
-	elem[2][2]=cosa;
-	elem[2][3]=0;
+    elem[2][0]=0;
+    elem[2][1]=sina;
+    elem[2][2]=cosa;
+    elem[2][3]=0;
 
-	elem[3][0]=0;
-	elem[3][1]=0;
-	elem[3][2]=0;
-	elem[3][3]=1;
+    elem[3][0]=0;
+    elem[3][1]=0;
+    elem[3][2]=0;
+    elem[3][3]=1;
 }
 //绕着Y轴旋转矩阵
 void  matrix::initRotateY(double sina,double cosa)
 {
-	setSize(4,4);
-	elem[0][0]=cosa;
-	elem[0][1]=0;
-	elem[0][2]=-sina;
-	elem[0][3]=0;
+    setSize(4,4);
+    elem[0][0]=cosa;
+    elem[0][1]=0;
+    elem[0][2]=sina;
+    elem[0][3]=0;
 
-	elem[1][0]=0;
-	elem[1][1]=1;
-	elem[1][2]=0;
-	elem[1][3]=0;
+    elem[1][0]=0;
+    elem[1][1]=1;
+    elem[1][2]=0;
+    elem[1][3]=0;
 
-	elem[2][0]=sina;
-	elem[2][1]=0;
-	elem[2][2]=cosa;
-	elem[2][3]=0;
+    elem[2][0]=-sina;
+    elem[2][1]=0;
+    elem[2][2]=cosa;
+    elem[2][3]=0;
 
-	elem[3][0]=0;
-	elem[3][1]=0;
-	elem[3][2]=0;
-	elem[3][3]=1;
+    elem[3][0]=0;
+    elem[3][1]=0;
+    elem[3][2]=0;
+    elem[3][3]=1;
 }
 //绕着Z轴旋转矩阵
 void  matrix::initRotateZ(double sina,double cosa)
 {
-	setSize(4,4);
-	elem[0][0]=cosa;
-	elem[0][1]=sina;
-	elem[0][2]=0;
-	elem[0][3]=0;
+    setSize(4,4);
+    elem[0][0]=cosa;
+    elem[0][1]=-sina;
+    elem[0][2]=0;
+    elem[0][3]=0;
 
-	elem[1][0]=-sina;
-	elem[1][1]=cosa;
-	elem[1][2]=0;
-	elem[1][3]=0;
+    elem[1][0]=sina;
+    elem[1][1]=cosa;
+    elem[1][2]=0;
+    elem[1][3]=0;
 
-	elem[2][0]=0;
-	elem[2][1]=0;
-	elem[2][2]=1;
-	elem[2][3]=0;
+    elem[2][0]=0;
+    elem[2][1]=0;
+    elem[2][2]=1;
+    elem[2][3]=0;
 
-	elem[3][0]=0;
-	elem[3][1]=0;
-	elem[3][2]=0;
-	elem[3][3]=1;
+    elem[3][0]=0;
+    elem[3][1]=0;
+    elem[3][2]=0;
+    elem[3][3]=1;
 }
 //平移矩阵
 void  matrix::initLinearMove(double x,double y,double z)
@@ -322,7 +318,7 @@ void  matrix::initRotateVector(mathVector v,double angle )
 	cosa = sqrt(v[1]*v[1]+v[2]*v[2])/sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]);
 	sina = -1*v[0]/sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]);
 	matrix Ry(4,4);
-	Ry.initRotateX(sina,cosa);
+    Ry.initRotateY(sina,cosa);
 
 	//3.绕着Z轴旋转angle (右手定则正向旋转)Rz
 	matrix Rz(4,4);
@@ -542,9 +538,6 @@ matrix  matrix::getinverseMatrix()
 		return adjoin;
 	}
 }
-
-
-
 
 void point3D::Rotate(mathVector v,point3D start,double angle)
 {
